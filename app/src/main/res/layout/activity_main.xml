@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:layout_margin="20dp">
+
+    <TextView
+        android:id="@+id/weight_title"
+        android:text="@string/logged_weights"
+        android:textAlignment="center"
+        android:textSize="30sp"
+        app:layout_constraintBottom_toTopOf="@+id/weights_scroll"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-smallcaps"
+        />
+
+    <TextView
+        android:id="@+id/weight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/weight"
+        android:textSize="25sp"
+        android:layout_marginStart="50sp"
+        android:layout_marginBottom="5dp"
+        android:fontFamily="sans-serif-smallcaps"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/weights_scroll"
+        app:layout_constraintRight_toLeftOf="@+id/date"
+        />
+
+    <TextView
+        android:id="@+id/date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/date"
+        android:textSize="25sp"
+        android:layout_marginStart="65sp"
+        android:layout_marginBottom="5dp"
+        android:fontFamily="sans-serif-smallcaps"
+        android:gravity="center"
+        app:layout_constraintLeft_toRightOf="@+id/weight"
+        app:layout_constraintBottom_toTopOf="@+id/weights_scroll"
+        />
+
+    <ScrollView
+        android:id="@+id/weights_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="100dp"
+        android:layout_marginBottom="100dp"
+        android:scrollbars="vertical"
+        android:background="@drawable/grid_theme"
+        app:layout_constraintTop_toBottomOf="@+id/weight_title">
+
+        <GridLayout
+            android:id="@+id/weights_grid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:columnCount="3">
+
+        </GridLayout>
+
+    </ScrollView>
+
+    <Button
+        android:id="@+id/log_weight_button"
+        android:layout_marginTop="20dp"
+        android:text="@string/log_weight"
+        app:layout_constraintTop_toBottomOf="@+id/weights_scroll"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

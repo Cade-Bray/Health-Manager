@@ -1,0 +1,33 @@
+<resources>
+    <string name="app_name">Health Manager</string>
+    <string name="login_email">Email</string>
+    <string name="login_password">Password</string>
+    <string name="login_button_sign_in">Sign-in</string>
+    <string name="login_button_sign_up">Sign-up</string>
+    <string name="login_forgot_password">Forgot Password?</string>
+    <string name="login_email_address_field">Email address</string>
+    <string name="password_star">**********</string>
+    <string name="forgot_password_text">This application is in closed testing. This means that
+    forgot passwords will need to be manually reset by contacting the administrator. You can reach
+    out to them at Cade.Bray@snhu.edu</string>
+    <string name="plain_back">Back</string>
+    <string name="sign_up">Sign-up</string>
+    <string name="sign_up_title">Sign Up!</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="logged_weights">Logged Weights</string>
+    <string name="log_weight">Log Weight</string>
+    <string name="weight">Weight</string>
+    <string name="date">Date</string>
+    <string name="placeholder">placeholder</string>
+    <string name="_100">100</string>
+    <string name="placeholder_date">01/01/1800</string>
+    <string name="remove">Remove</string>
+    <string name="no_weights">No weights have been logged.</string>"
+    <string name="invalid_date">Invalid Date</string>
+    <string name="log_weight_title">Log Weight</string>
+    <string name="enter_your_weight">Enter your weight (i.e. 125.5)</string>
+    <string name="units">Units</string>
+    <string name="pounds_lbs">Pounds (lbs)</string>
+    <string name="kilograms_kg">Kilograms (kg)</string>
+    <string name="timestamp">Timestamp</string>
+</resources>
