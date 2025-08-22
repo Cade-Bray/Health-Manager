@@ -9,6 +9,7 @@ import android.util.Log;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+@Deprecated
 public class UserContentDatabase extends SQLiteOpenHelper {
 
     public static class WeightLog {
@@ -49,6 +50,7 @@ public class UserContentDatabase extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+    @SuppressWarnings("unused")
     public long logWeight(WeightLog weightLog) {
         SQLiteDatabase db = getWritableDatabase();
 

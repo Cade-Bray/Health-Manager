@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey;
 @Entity(tableName = "health_logs")
 public class Log {
     @PrimaryKey(autoGenerate = true)
-    private int id;
+    private long id;
     private String date;
     private String time;
     private float weight;
@@ -29,7 +29,7 @@ public class Log {
      * Getter for the id. This is the primary key.
      * @return The id of the log.
      */
-    public int getId() {
+    public long getId() {
         return id;
     }
 
@@ -39,7 +39,7 @@ public class Log {
      * @param id The id to set as an int. This will be the primary key.
      */
     @SuppressWarnings("unused")
-    private void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
