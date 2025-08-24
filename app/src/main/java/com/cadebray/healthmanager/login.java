@@ -3,6 +3,7 @@ package com.cadebray.healthmanager;
 import android.content.Intent;
 import android.graphics.Insets;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,12 +12,15 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class login extends AppCompatActivity {
     private EditText mEmail;
     private EditText mPassword;
-    private UserDatabase mUserDatabase;
-    private _UserDatabase mUserUserDatabase;
+    private UserDao mUserDao;
+    private ExecutorService mExecutor;
+    private Handler mMainHandler;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -29,12 +33,18 @@ public class login extends AppCompatActivity {
             return insets;
         });
 
+        // Define Executor and Handler
+        mExecutor = Executors.newSingleThreadExecutor();
+        mMainHandler = new Handler(getMainLooper());
+
         // Define Editable Fields
         mEmail = findViewById(R.id.login_email);
         mPassword = findViewById(R.id.login_password);
 
         // Define user database
-        mUserUserDatabase = new _UserDatabase(this);
+        //mUserUserDatabase = new _UserDatabase(this);
+        UserDatabase mUserDatabase = UserDatabase.getDatabase(this);
+        mUserDao = mUserDatabase.userDao();
 
         // Set the forgot button listener
         Button forgot_button = findViewById(R.id.Forgot_button);
@@ -71,16 +81,25 @@ public class login extends AppCompatActivity {
         String password = mPassword.getText().toString();
 
         if (!email.isEmpty() && !password.isEmpty()) {
-            _UserDatabase.UserData user = mUserUserDatabase.authenticateUser(email, password);
-            if (user.isAuthorized && user.isAuthenticated) {
-                Intent intent = new Intent(this, MainActivity.class);
-                // Pass the email to the next activity
-                intent.putExtra("email", email);
-                // Start the next activity
-                startActivity(intent);
-            } else {
-                failedToAuth();
-            }
+            // Authenticate the user
+            mExecutor.execute(() -> {
+                User user = mUserDao.authenticateUser(email, password);
+                if (user != null) {
+                    mMainHandler.post(() -> {
+                        Intent intent = new Intent(login.this, MainActivity.class);
+                        intent.putExtra("email", email);
+                        startActivity(intent);
+                        Toast.makeText(
+                                login.this,
+                                "Successfully Authenticated!",
+                                Toast.LENGTH_LONG
+                        ).show();
+                    });
+                } else {
+                    mMainHandler.post(this::failedToAuth);
+                }
+            });
+
         } else {
             failedToAuth();
         }

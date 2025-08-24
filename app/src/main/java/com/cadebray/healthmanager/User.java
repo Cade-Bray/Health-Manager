@@ -1,9 +1,10 @@
 package com.cadebray.healthmanager;
 
 import androidx.room.Entity;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "users")
+@Entity(tableName = "users", indices = {@Index(value = {"email"}, unique = true)})
 public class User {
     @PrimaryKey(autoGenerate = true)
     private long id;
@@ -16,6 +17,7 @@ public class User {
     /**
      * Default constructor.
      */
+    @SuppressWarnings("unused")
     public User() {
         // Default constructor
         this.password = "";
@@ -29,6 +31,7 @@ public class User {
      * @param email The email of the user.
      * @param is_authorized Whether the user is authorized.
      */
+    @SuppressWarnings("unused")
     public User(String password, String email, boolean is_authorized) {
         // When it comes time I'd implement the method for salting here.
         this.password = password;
