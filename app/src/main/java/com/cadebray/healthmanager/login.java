@@ -85,6 +85,7 @@ public class login extends AppCompatActivity {
             mExecutor.execute(() -> {
                 User user = mUserDao.authenticateUser(email, password);
                 if (user != null) {
+                    // User authenticated successfully
                     mMainHandler.post(() -> {
                         Intent intent = new Intent(login.this, MainActivity.class);
                         intent.putExtra("email", email);
@@ -96,11 +97,25 @@ public class login extends AppCompatActivity {
                         ).show();
                     });
                 } else {
-                    mMainHandler.post(this::failedToAuth);
+                    if (mUserDao.getUser(email) == null) {
+                        // User doesn't exist in the database so take them to sign up
+                        mMainHandler.post(() -> {
+                            Intent intent = new Intent(login.this, sign_up.class);
+                            Toast.makeText(
+                                    this,
+                                    "User does not exist.",
+                                    Toast.LENGTH_LONG
+                            ).show();
+                            startActivity(intent);
+                        });
+                    } else {
+                        // User exists but failed to authenticate
+                        mMainHandler.post(this::failedToAuth);
+                    }
                 }
             });
-
         } else {
+            // User failed to provide credentials
             failedToAuth();
         }
     }
