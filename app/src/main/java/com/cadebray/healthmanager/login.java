@@ -3,6 +3,7 @@ package com.cadebray.healthmanager;
 import android.content.Intent;
 import android.graphics.Insets;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -11,11 +12,15 @@ import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class login extends AppCompatActivity {
     private EditText mEmail;
     private EditText mPassword;
-    private UserDatabase mUserUserDatabase;
+    private UserDao mUserDao;
+    private ExecutorService mExecutor;
+    private Handler mMainHandler;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -28,12 +33,18 @@ public class login extends AppCompatActivity {
             return insets;
         });
 
+        // Define Executor and Handler
+        mExecutor = Executors.newSingleThreadExecutor();
+        mMainHandler = new Handler(getMainLooper());
+
         // Define Editable Fields
         mEmail = findViewById(R.id.login_email);
         mPassword = findViewById(R.id.login_password);
 
         // Define user database
-        mUserUserDatabase = new UserDatabase(this);
+        //mUserUserDatabase = new _UserDatabase(this);
+        UserDatabase mUserDatabase = UserDatabase.getDatabase(this);
+        mUserDao = mUserDatabase.userDao();
 
         // Set the forgot button listener
         Button forgot_button = findViewById(R.id.Forgot_button);
@@ -51,28 +62,67 @@ public class login extends AppCompatActivity {
         login_button.setOnLongClickListener(this::onLongSignIn);
     }
 
+    /**
+     * Called when the forgot password button is pressed
+     * @param view The button that was pressed
+     */
     public void onForgotPassword(View view){
         Intent intent = new Intent(this, forgot_password.class);
         startActivity(intent);
     }
 
+
+    /**
+     * Called when the sign in button is pressed
+     * @param view The button that was pressed
+     */
     public void onSignIn(View view){
         String email = mEmail.getText().toString().trim();
         String password = mPassword.getText().toString();
 
         if (!email.isEmpty() && !password.isEmpty()) {
-            UserDatabase.UserData user = mUserUserDatabase.authenticateUser(email, password);
-            if (user.isAuthorized && user.isAuthenticated) {
-                Intent intent = new Intent(this, MainActivity.class);
-                startActivity(intent);
-            } else {
-                failedToAuth();
-            }
+            // Authenticate the user
+            mExecutor.execute(() -> {
+                User user = mUserDao.authenticateUser(email, password);
+                if (user != null) {
+                    // User authenticated successfully
+                    mMainHandler.post(() -> {
+                        Intent intent = new Intent(login.this, MainActivity.class);
+                        intent.putExtra("email", email);
+                        startActivity(intent);
+                        Toast.makeText(
+                                login.this,
+                                "Successfully Authenticated!",
+                                Toast.LENGTH_LONG
+                        ).show();
+                    });
+                } else {
+                    if (mUserDao.getUser(email) == null) {
+                        // User doesn't exist in the database so take them to sign up
+                        mMainHandler.post(() -> {
+                            Intent intent = new Intent(login.this, sign_up.class);
+                            Toast.makeText(
+                                    this,
+                                    "User does not exist.",
+                                    Toast.LENGTH_LONG
+                            ).show();
+                            startActivity(intent);
+                        });
+                    } else {
+                        // User exists but failed to authenticate
+                        mMainHandler.post(this::failedToAuth);
+                    }
+                }
+            });
         } else {
+            // User failed to provide credentials
             failedToAuth();
         }
     }
 
+    /**
+     * This is called when the user fails to authenticate. Basically clean up and notification.
+     */
     private void failedToAuth(){
         Toast.makeText(
                 login.this,
@@ -82,6 +132,11 @@ public class login extends AppCompatActivity {
         mPassword.setText("");
     }
 
+    /**
+     * Called when the sign in button is long pressed
+     * @param view The button that was pressed
+     * @return Whether the long press was successful
+     */
     public boolean onLongSignIn(View view){
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
@@ -93,6 +148,10 @@ public class login extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * Called when the sign up button is pressed
+     * @param view The button that was pressed
+     */
     public void onSignUp(View view){
         Intent intent = new Intent(this, sign_up.class);
         startActivity(intent);

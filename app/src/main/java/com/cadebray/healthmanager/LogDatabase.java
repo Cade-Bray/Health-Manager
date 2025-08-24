@@ -6,19 +6,20 @@ import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
 @SuppressWarnings("unused")
-@Database(entities = {User.class}, version = 1)
-public abstract class UserDatabase extends RoomDatabase {
+@Database(entities = {Log.class}, version = 1)
+public abstract class LogDatabase extends RoomDatabase {
     @SuppressWarnings("unused")
-    public abstract UserDao userDao();
-    private static volatile UserDatabase INSTANCE;
+    public abstract LogDao logDao();
+
+    private static volatile LogDatabase INSTANCE;
 
     @SuppressWarnings("unused")
-    public static UserDatabase getDatabase(final Context context) {
+    public static LogDatabase getDatabase(final Context context) {
         if (INSTANCE == null) {
-            synchronized (UserDatabase.class) {
+            synchronized (LogDatabase.class) {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
-                                    UserDatabase.class, "user_database")
+                            LogDatabase.class, "log_database")
                             .build();
                 }
             }

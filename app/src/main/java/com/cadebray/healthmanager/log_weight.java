@@ -2,6 +2,7 @@ package com.cadebray.healthmanager;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.DatePicker;
@@ -14,14 +15,21 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class log_weight extends AppCompatActivity {
 
-    private UserContentDatabase mUserContentDatabase;
+    private LogDao mLogDao;
+    private LogDatabase mLogDatabase;
     private EditText mWeight;
     private RadioGroup mUnits;
     private DatePicker mDate;
     private TimePicker mTime;
+    private String mEmail;
+    private ExecutorService mExecutor;
+    private Handler mMainHandler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,22 +47,32 @@ public class log_weight extends AppCompatActivity {
         mLogWeightButton.setOnClickListener(this::onLogWeight);
 
         // Initialize the database
-        mUserContentDatabase = new UserContentDatabase(this);
+        mExecutor = Executors.newSingleThreadExecutor();
+        mMainHandler = new Handler(getMainLooper());
+        mLogDatabase = LogDatabase.getDatabase(this);
+        mLogDao = mLogDatabase.logDao();
 
         // Initialize the views
         mWeight = findViewById(R.id.weight);
         mUnits = findViewById(R.id.units_radio);
         mDate = findViewById(R.id.date_picker);
         mTime = findViewById(R.id.time_picker);
+
+        // Get the email from the intent
+        Intent intent = getIntent();
+        mEmail = intent.getStringExtra("email");
     }
 
     public void onLogWeight(View view) {
-        UserContentDatabase.WeightLog log = new UserContentDatabase.WeightLog();
+        final Log log = new Log();
+
+        // Set the username
+        log.setUsername(mEmail);
 
         // Get the weight from the EditText
         String weightString = mWeight.getText().toString();
         if (!weightString.isEmpty()) {
-            log.weight = Float.parseFloat(weightString);
+            log.setWeight(Float.parseFloat(weightString));
         } else {
             Toast.makeText(this, "Please provide a valid weight", Toast.LENGTH_SHORT).show();
             return;
@@ -63,9 +81,9 @@ public class log_weight extends AppCompatActivity {
         // Get the units from the RadioGroup
         int selectedId = mUnits.getCheckedRadioButtonId();
         if (selectedId == R.id.lb) {
-            log.weightUnit = "lbs";
+            log.setWeightUnit("lbs");
         } else if (selectedId == R.id.kg) {
-            log.weightUnit = "kg";
+            log.setWeightUnit("kg");
         } else {
             Toast.makeText(this, "Please select a unit", Toast.LENGTH_SHORT).show();
             return;
@@ -80,22 +98,45 @@ public class log_weight extends AppCompatActivity {
         int hour = mTime.getHour();
         int minute = mTime.getMinute();
 
-        // Set the log's timestamp
-        log.timestamp = LocalDateTime.of(year, month, day, hour, minute);
+        // Set the timestamp
+        LocalDateTime timestamp = LocalDateTime.of(year, month, day, hour, minute);
 
-        long success = mUserContentDatabase.logWeight(log);
+        // Set the log's Date
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        log.setDate(timestamp.format(formatter));
 
-        if (success == -1) {
-            Toast.makeText(this, "Failed to log weight", Toast.LENGTH_SHORT).show();
-            Intent resultIntent = new Intent();
-            setResult(RESULT_CANCELED, resultIntent);
-        } else {
-            Intent resultIntent = new Intent();
-            setResult(RESULT_OK, resultIntent);
-        }
+        // Set the log's time
+        DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("HH:mm");
+        log.setTime(timestamp.format(formatter2));
 
-        Toast.makeText(this, "Weight logged", Toast.LENGTH_SHORT).show();
-        finish();
+        // Set to the background thread
+        mExecutor.execute(() -> {
+            long rowId;
+            boolean success = false;
+            try {
+                rowId = mLogDao.insert(log);
+                android.util.Log.i("LogWeightActivity", "Logged weight");
+                success = rowId > -1;
+            } catch (Exception e) {
+                android.util.Log.e("LogWeightActivity", "Error logging weight");
+            }
+
+            final boolean finalSuccess = success;
+
+            mMainHandler.post(
+                    () -> {
+                        if (finalSuccess) {
+                            Toast.makeText(log_weight.this, "Weight logged", Toast.LENGTH_SHORT).show();
+                            Intent resultIntent = new Intent();
+                            setResult(RESULT_OK, resultIntent);
+                        } else {
+                            Intent resultIntent = new Intent();
+                            setResult(RESULT_CANCELED, resultIntent);
+                        }
+                        finish();
+                    }
+            );
+        });
     }
 
     /**
