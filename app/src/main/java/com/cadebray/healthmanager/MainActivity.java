@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -18,15 +19,18 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
-
-    private UserContentDatabase mUserContentDatabase;
-    private UserContentDatabase.WeightLog[] mWeights;
+    private List<com.cadebray.healthmanager.Log> mWeights;
+    private LogDao mLogDao;
+    private LogDatabase mLogDatabase;
+    private ExecutorService mExecutor;
+    private Handler mMainHandler;
     private Button mLogWeightButton;
+    private String mEmail;
     private GridLayout mWeightsGrid;
     private static final int LOG_WEIGHT_REQUEST_CODE = 1;
 
@@ -42,33 +46,51 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Define elements
-        mUserContentDatabase = new UserContentDatabase(this);
+        //mUserContentDatabase = new UserContentDatabase(this);
+        mLogDatabase = LogDatabase.getDatabase(this);
+        mLogDao = mLogDatabase.logDao();
+        mExecutor = Executors.newSingleThreadExecutor();
+        mMainHandler = new Handler(getMainLooper());
         mLogWeightButton = findViewById(R.id.log_weight_button);
         mWeightsGrid = findViewById(R.id.weights_grid);
 
+        // Get the email from the intent
+        Intent intent = getIntent();
+        mEmail = intent.getStringExtra("email");
+
         // Gather weights from database
-        loadAndDisplayWeights();
+        loadWeights();
 
         // Set Log weight listener
         mLogWeightButton.setOnClickListener(this::onLogWeight);
     }
 
     /**
-     * Loads and displays the weights from the database. This function handles the logic for
-     * creating textviews and buttons for each weight.
+     * This method loads the weights from the database and displays them.
      */
-    private void loadAndDisplayWeights() {
+    private void loadWeights(){
+        mExecutor.execute(() -> {
+            mWeights = mLogDao.getLogs(mEmail);
+            mMainHandler.post(this::displayWeights);
+        });
+    }
+
+    /**
+     * This method displays the weights in the grid layout. If there are no weights, it displays a
+     * message. If there are weights, it displays them. Ideally you should call loadWeights() first
+     * which will call this method. If this is called by itself it will only display the weights
+     * that are currently assigned to memory. If you want to refresh the weights to be updated and
+     * displayed you should call loadWeights.
+     */
+    private void displayWeights() {
         int childCount = mWeightsGrid.getChildCount();
         int COLUMN_COUNT = 3;
         if (childCount > COLUMN_COUNT){
             mWeightsGrid.removeViews(COLUMN_COUNT, childCount - COLUMN_COUNT);
         }
 
-        // Gather the weights from the database and setup
-        mWeights = mUserContentDatabase.getWeights();
-
         // There are no weights to display
-        if (mWeights == null || mWeights.length == 0) {
+        if (mWeights == null || mWeights.isEmpty()) {
             GridLayout.LayoutParams params = new GridLayout.LayoutParams();
             TextView emptyTextView = new TextView(this);
             params.rowSpec = GridLayout.spec(1); // Starting after the header row
@@ -82,14 +104,15 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // There are weights to display, create the textviews and buttons
-        for (int i = 0; i < mWeights.length; i++) {
-            UserContentDatabase.WeightLog log = mWeights[i];
+        // There are weights to display, create the text views and buttons
+        for (int i = 0; i < mWeights.size(); i++) {
+            //UserContentDatabase.WeightLog log = mWeights[i]; Depreciated
+            com.cadebray.healthmanager.Log log = mWeights.get(i);
 
             // Create a textview for weight
             GridLayout.LayoutParams params = new GridLayout.LayoutParams();
             TextView weightTextView = new TextView(this);
-            String weight = log.weight + " " + log.weightUnit;
+            String weight = log.getWeight() + " " + log.getWeightUnit();
             weightTextView.setText(weight);
             weightTextView.setTextSize(15);
             weightTextView.setPadding(10, 10, 10, 10);
@@ -108,23 +131,8 @@ public class MainActivity extends AppCompatActivity {
             params.setMarginEnd(marginEndPixels);
             params.setGravity(Gravity.CENTER_HORIZONTAL);
             TextView dateTextView = new TextView(this);
-            try {
-                LocalDateTime dateTime = log.timestamp;
-
-                // Format the date
-                DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy");
-                String formattedDate = dateTime.format(outputFormatter);
-                dateTextView.setText(formattedDate);
-
-            } catch (DateTimeParseException e) {
-                // Handle the case where the timestamp string is not in the expected format
-                Log.e("MainActivity", "Error parsing date: " + e.getMessage());
-                dateTextView.setText(R.string.invalid_date);
-            } catch (NullPointerException e) {
-                // Handle the case where log or log.timestamp is null
-                Log.e("MainActivity", "Error parsing date: " + e.getMessage());
-                dateTextView.setText(R.string.invalid_date);
-            }
+            // Set the date here
+            dateTextView.setText(log.getDate());
             dateTextView.setTextSize(15);
             dateTextView.setPadding(10, 10, 10, 10);
             params.width = WRAP_CONTENT;
@@ -142,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
                     null
             );
             deleteButton.setText(R.string.remove);
-            deleteButton.setId(log.id);
+            deleteButton.setId((int) log.getId());
             deleteButton.setTextSize(15);
             deleteButton.setPadding(10, 10, 10, 10);
             params.setMarginEnd(marginEndPixels);
@@ -150,6 +158,7 @@ public class MainActivity extends AppCompatActivity {
             params.rowSpec = GridLayout.spec(i);
             params.columnSpec = GridLayout.spec(2);
             deleteButton.setLayoutParams(params);
+
             // Set the button's click listener
             deleteButton.setOnClickListener(this::onRemove);
             mWeightsGrid.addView(deleteButton);
@@ -161,12 +170,25 @@ public class MainActivity extends AppCompatActivity {
      * @param view The button that was pressed
      */
     public void onRemove(View view){
-        boolean status = mUserContentDatabase.removeLoggedWeight(view.getId());
-        if (!status) {
-            Toast.makeText(this, "Failed to remove weight", Toast.LENGTH_SHORT).show();
-        }
+        // Calling the remove method from the database which needs to be called on a background thread.
+        mExecutor.execute(() -> {
+            mLogDao.deleteLog(view.getId(), mEmail);
+            if (mLogDao.getLog(view.getId(), mEmail) != null) {
+                // Toast failed to remove weight called on the main thread because toasts are not
+                // allowed on background threads
+                mMainHandler.post(() -> {
+                    Toast.makeText(
+                            MainActivity.this,
+                            "Failed to remove weight",
+                            Toast.LENGTH_LONG
+                    ).show();
+                });
+            }
+        });
+
+        // Call the method to refresh the weights
         mWeightsGrid.removeAllViews();
-        loadAndDisplayWeights();
+        loadWeights();
     }
 
     /**
@@ -175,6 +197,7 @@ public class MainActivity extends AppCompatActivity {
      */
     public void onLogWeight(View view){
         Intent intent = new Intent(this, log_weight.class);
+        intent.putExtra("email", mEmail);
         startActivityForResult(intent, LOG_WEIGHT_REQUEST_CODE);
     }
 
@@ -187,7 +210,7 @@ public class MainActivity extends AppCompatActivity {
                 // Reload and display the weights
                 Log.d("MainActivity", "Returned from log_weight successfully. Refreshing weights.");
                 mWeightsGrid.removeAllViews();
-                loadAndDisplayWeights();
+                loadWeights();
             } else if (resultCode == Activity.RESULT_CANCELED) {
                 Log.d("MainActivity", "Returned from log_weight with cancel.");
             }

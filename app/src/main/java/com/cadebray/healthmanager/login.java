@@ -15,7 +15,8 @@ import androidx.core.view.WindowInsetsCompat;
 public class login extends AppCompatActivity {
     private EditText mEmail;
     private EditText mPassword;
-    private UserDatabase mUserUserDatabase;
+    private UserDatabase mUserDatabase;
+    private _UserDatabase mUserUserDatabase;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -33,7 +34,7 @@ public class login extends AppCompatActivity {
         mPassword = findViewById(R.id.login_password);
 
         // Define user database
-        mUserUserDatabase = new UserDatabase(this);
+        mUserUserDatabase = new _UserDatabase(this);
 
         // Set the forgot button listener
         Button forgot_button = findViewById(R.id.Forgot_button);
@@ -51,19 +52,31 @@ public class login extends AppCompatActivity {
         login_button.setOnLongClickListener(this::onLongSignIn);
     }
 
+    /**
+     * Called when the forgot password button is pressed
+     * @param view The button that was pressed
+     */
     public void onForgotPassword(View view){
         Intent intent = new Intent(this, forgot_password.class);
         startActivity(intent);
     }
 
+
+    /**
+     * Called when the sign in button is pressed
+     * @param view The button that was pressed
+     */
     public void onSignIn(View view){
         String email = mEmail.getText().toString().trim();
         String password = mPassword.getText().toString();
 
         if (!email.isEmpty() && !password.isEmpty()) {
-            UserDatabase.UserData user = mUserUserDatabase.authenticateUser(email, password);
+            _UserDatabase.UserData user = mUserUserDatabase.authenticateUser(email, password);
             if (user.isAuthorized && user.isAuthenticated) {
                 Intent intent = new Intent(this, MainActivity.class);
+                // Pass the email to the next activity
+                intent.putExtra("email", email);
+                // Start the next activity
                 startActivity(intent);
             } else {
                 failedToAuth();
@@ -73,6 +86,9 @@ public class login extends AppCompatActivity {
         }
     }
 
+    /**
+     * This is called when the user fails to authenticate. Basically clean up and notification.
+     */
     private void failedToAuth(){
         Toast.makeText(
                 login.this,
@@ -82,6 +98,11 @@ public class login extends AppCompatActivity {
         mPassword.setText("");
     }
 
+    /**
+     * Called when the sign in button is long pressed
+     * @param view The button that was pressed
+     * @return Whether the long press was successful
+     */
     public boolean onLongSignIn(View view){
         Intent intent = new Intent(this, MainActivity.class);
         startActivity(intent);
@@ -93,6 +114,10 @@ public class login extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * Called when the sign up button is pressed
+     * @param view The button that was pressed
+     */
     public void onSignUp(View view){
         Intent intent = new Intent(this, sign_up.class);
         startActivity(intent);

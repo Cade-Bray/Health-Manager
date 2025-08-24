@@ -27,6 +27,7 @@ public class log_weight extends AppCompatActivity {
     private RadioGroup mUnits;
     private DatePicker mDate;
     private TimePicker mTime;
+    private String mEmail;
     private ExecutorService mExecutor;
     private Handler mMainHandler;
 
@@ -56,10 +57,17 @@ public class log_weight extends AppCompatActivity {
         mUnits = findViewById(R.id.units_radio);
         mDate = findViewById(R.id.date_picker);
         mTime = findViewById(R.id.time_picker);
+
+        // Get the email from the intent
+        Intent intent = getIntent();
+        mEmail = intent.getStringExtra("email");
     }
 
     public void onLogWeight(View view) {
         final Log log = new Log();
+
+        // Set the username
+        log.setUsername(mEmail);
 
         // Get the weight from the EditText
         String weightString = mWeight.getText().toString();

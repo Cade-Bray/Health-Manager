@@ -16,7 +16,7 @@ public class sign_up extends AppCompatActivity {
     private EditText mEmail;
     private EditText mPassword;
     private EditText mConfirmPassword;
-    private UserDatabase mUserDatabase;
+    private _UserDatabase mUserDatabase;
 
     @Override
     public void onCreate(Bundle savedInstanceState){
@@ -34,7 +34,7 @@ public class sign_up extends AppCompatActivity {
         mEmail = findViewById(R.id.sign_up_email);
         mPassword = findViewById(R.id.sign_up_password);
         mConfirmPassword = findViewById(R.id.sign_up_password_confirm);
-        mUserDatabase = new UserDatabase(this);
+        mUserDatabase = new _UserDatabase(this);
 
         // Set up listener
         mSignUp.setOnClickListener(this::onSignUp);
