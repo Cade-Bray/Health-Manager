@@ -133,8 +133,6 @@ public class log_weight extends AppCompatActivity {
                             Intent resultIntent = new Intent();
                             setResult(RESULT_CANCELED, resultIntent);
                         }
-
-                        Toast.makeText(log_weight.this, "Weight logged", Toast.LENGTH_SHORT).show();
                         finish();
                     }
             );

@@ -75,11 +75,11 @@ public class sign_up extends AppCompatActivity {
                     User newUser = new User(password, email, true);
                     mUserDao.insert(newUser);
                     mMainHandler.post(
-                            () -> Toast.makeText(
-                                    this,
-                                    "User created",
-                                    Toast.LENGTH_SHORT
-                            ).show()
+                        () -> Toast.makeText(
+                                this,
+                                "User created",
+                                Toast.LENGTH_SHORT
+                        ).show()
                     );
                 }
             });

@@ -26,10 +26,8 @@ import java.util.concurrent.Executors;
 public class MainActivity extends AppCompatActivity {
     private List<com.cadebray.healthmanager.Log> mWeights;
     private LogDao mLogDao;
-    private LogDatabase mLogDatabase;
     private ExecutorService mExecutor;
     private Handler mMainHandler;
-    private Button mLogWeightButton;
     private String mEmail;
     private GridLayout mWeightsGrid;
     private static final int LOG_WEIGHT_REQUEST_CODE = 1;
@@ -47,11 +45,11 @@ public class MainActivity extends AppCompatActivity {
 
         // Define elements
         //mUserContentDatabase = new UserContentDatabase(this);
-        mLogDatabase = LogDatabase.getDatabase(this);
+        LogDatabase mLogDatabase = LogDatabase.getDatabase(this);
         mLogDao = mLogDatabase.logDao();
         mExecutor = Executors.newSingleThreadExecutor();
         mMainHandler = new Handler(getMainLooper());
-        mLogWeightButton = findViewById(R.id.log_weight_button);
+        Button mLogWeightButton = findViewById(R.id.log_weight_button);
         mWeightsGrid = findViewById(R.id.weights_grid);
 
         // Get the email from the intent
@@ -176,13 +174,11 @@ public class MainActivity extends AppCompatActivity {
             if (mLogDao.getLog(view.getId(), mEmail) != null) {
                 // Toast failed to remove weight called on the main thread because toasts are not
                 // allowed on background threads
-                mMainHandler.post(() -> {
-                    Toast.makeText(
-                            MainActivity.this,
-                            "Failed to remove weight",
-                            Toast.LENGTH_LONG
-                    ).show();
-                });
+                mMainHandler.post(() -> Toast.makeText(
+                        MainActivity.this,
+                        "Failed to remove weight",
+                        Toast.LENGTH_LONG
+                ).show());
             }
         });
 
