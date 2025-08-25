@@ -30,4 +30,9 @@
     <string name="pounds_lbs">Pounds (lbs)</string>
     <string name="kilograms_kg">Kilograms (kg)</string>
     <string name="timestamp">Timestamp</string>
+    <string name="tap_any_weight_to_update_it">Tap any weight to update it!</string>
+    <string name="table_of_weights_if_any_provided_logged">Table of weights if any provided logged.</string>
+    <string name="enter_your_goal_weight">Enter your Goal Weight!</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="enter_your_phone_number">Enter your phone number</string>
 </resources>

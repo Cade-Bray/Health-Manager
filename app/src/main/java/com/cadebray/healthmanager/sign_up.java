@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.RadioGroup;
 import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -18,9 +19,12 @@ public class sign_up extends AppCompatActivity {
     private EditText mEmail;
     private EditText mPassword;
     private EditText mConfirmPassword;
+    private EditText mPhone;
     private UserDao mUserDao;
     private ExecutorService mExecutor;
     private Handler mMainHandler;
+    private EditText mGoal;
+    private RadioGroup mUnits;
 
     @Override
     public void onCreate(Bundle savedInstanceState){
@@ -38,6 +42,11 @@ public class sign_up extends AppCompatActivity {
         mEmail = findViewById(R.id.sign_up_email);
         mPassword = findViewById(R.id.sign_up_password);
         mConfirmPassword = findViewById(R.id.sign_up_password_confirm);
+        mPhone = findViewById(R.id.Phone_number);
+        mGoal = findViewById(R.id.weight);
+        mUnits = findViewById(R.id.units_radio);
+
+        // Set up user database
         UserDatabase userDatabase = UserDatabase.getDatabase(this);
         mUserDao = userDatabase.userDao();
 
@@ -60,6 +69,10 @@ public class sign_up extends AppCompatActivity {
         String password_confirmed = mConfirmPassword.getText().toString();
         if (password.equals(password_confirmed)) {
             String email = mEmail.getText().toString();
+            String goal = mGoal.getText().toString();
+            String units = mUnits.getCheckedRadioButtonId() == R.id.lb ? "lbs" : "kg";
+            String phone = mPhone.getText().toString();
+
             mExecutor.execute(() -> {
                 User user = mUserDao.getUser(email);
                 if (user != null) {
@@ -72,7 +85,7 @@ public class sign_up extends AppCompatActivity {
                     );
                 }
                 else {
-                    User newUser = new User(password, email, true);
+                    User newUser = new User(password, email, goal, units, phone, true);
                     mUserDao.insert(newUser);
                     mMainHandler.post(
                         () -> Toast.makeText(

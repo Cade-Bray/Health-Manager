@@ -4,6 +4,7 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
@@ -29,7 +30,10 @@ public class MainActivity extends AppCompatActivity {
     private ExecutorService mExecutor;
     private Handler mMainHandler;
     private String mEmail;
+    private String mPhone;
     private GridLayout mWeightsGrid;
+    private String mGoal;
+    private String mUnits;
     private static final int LOG_WEIGHT_REQUEST_CODE = 1;
 
     @Override
@@ -44,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         // Define elements
-        //mUserContentDatabase = new UserContentDatabase(this);
         LogDatabase mLogDatabase = LogDatabase.getDatabase(this);
         mLogDao = mLogDatabase.logDao();
         mExecutor = Executors.newSingleThreadExecutor();
@@ -55,6 +58,9 @@ public class MainActivity extends AppCompatActivity {
         // Get the email from the intent
         Intent intent = getIntent();
         mEmail = intent.getStringExtra("email");
+        mGoal = intent.getStringExtra("goal");
+        mUnits = intent.getStringExtra("units");
+        mPhone = intent.getStringExtra("phone");
 
         // Gather weights from database
         loadWeights();
@@ -111,7 +117,10 @@ public class MainActivity extends AppCompatActivity {
             GridLayout.LayoutParams params = new GridLayout.LayoutParams();
             TextView weightTextView = new TextView(this);
             String weight = log.getWeight() + " " + log.getWeightUnit();
+            // Set the weight here
             weightTextView.setText(weight);
+            // Set the id here
+            weightTextView.setId((int) log.getId());
             weightTextView.setTextSize(15);
             weightTextView.setPadding(10, 10, 10, 10);
             params.width = WRAP_CONTENT;
@@ -131,6 +140,8 @@ public class MainActivity extends AppCompatActivity {
             TextView dateTextView = new TextView(this);
             // Set the date here
             dateTextView.setText(log.getDate());
+            // Set the id here
+            dateTextView.setId((int) log.getId());
             dateTextView.setTextSize(15);
             dateTextView.setPadding(10, 10, 10, 10);
             params.width = WRAP_CONTENT;
@@ -160,6 +171,10 @@ public class MainActivity extends AppCompatActivity {
             // Set the button's click listener
             deleteButton.setOnClickListener(this::onRemove);
             mWeightsGrid.addView(deleteButton);
+
+            // Set the Weight and Date click listeners here
+            weightTextView.setOnClickListener(this::onUpdate);
+            dateTextView.setOnClickListener(this::onUpdate);
         }
     }
 
@@ -194,6 +209,9 @@ public class MainActivity extends AppCompatActivity {
     public void onLogWeight(View view){
         Intent intent = new Intent(this, log_weight.class);
         intent.putExtra("email", mEmail);
+        intent.putExtra("goal", mGoal);
+        intent.putExtra("units", mUnits);
+        intent.putExtra("phone", mPhone);
         startActivityForResult(intent, LOG_WEIGHT_REQUEST_CODE);
     }
 
@@ -211,5 +229,15 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("MainActivity", "Returned from log_weight with cancel.");
             }
         }
+    }
+
+    public void onUpdate(View view){
+        Intent intent = new Intent(this, log_weight.class);
+        intent.putExtra("id", view.getId());
+        intent.putExtra("email", mEmail);
+        intent.putExtra("goal", mGoal);
+        intent.putExtra("units", mUnits);
+        intent.putExtra("phone", mPhone);
+        startActivityForResult(intent, LOG_WEIGHT_REQUEST_CODE);
     }
 }

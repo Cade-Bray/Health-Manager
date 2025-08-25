@@ -53,6 +53,7 @@
 
     <ScrollView
         android:id="@+id/weights_scroll"
+        android:contentDescription="@string/table_of_weights_if_any_provided_logged"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="100dp"
@@ -75,10 +76,20 @@
         android:id="@+id/log_weight_button"
         android:layout_marginTop="20dp"
         android:text="@string/log_weight"
-        app:layout_constraintTop_toBottomOf="@+id/weights_scroll"
+        app:layout_constraintTop_toBottomOf="@+id/tap_any_weight_to_update_it"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         android:layout_width="wrap_content"
         android:layout_height="50dp"/>
+
+    <TextView
+        android:id="@+id/tap_any_weight_to_update_it"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/tap_any_weight_to_update_it"
+        app:layout_constraintTop_toBottomOf="@+id/weights_scroll"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

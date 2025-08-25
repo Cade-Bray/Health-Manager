@@ -89,6 +89,9 @@ public class login extends AppCompatActivity {
                     mMainHandler.post(() -> {
                         Intent intent = new Intent(login.this, MainActivity.class);
                         intent.putExtra("email", email);
+                        intent.putExtra("goal", user.getGoal());
+                        intent.putExtra("units", user.getUnits());
+                        intent.putExtra("phone", user.getPhone());
                         startActivity(intent);
                         Toast.makeText(
                                 login.this,
